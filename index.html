@@ -776,13 +776,20 @@ const busca = document.getElementById('filtroBusca').value.trim().toLowerCase();
 const status = document.getElementById('filtroStatus').value;
 const data = document.getElementById('filtroData').value;
 
+const hoje = new Date();
+hoje.setHours(0, 0, 0, 0);
+const hojeISO = `${hoje.getFullYear()}-${String(hoje.getMonth() + 1).padStart(2, '0')}-${String(hoje.getDate()).padStart(2, '0')}`;
+
 return agendamentosCarregados.filter(item => {
 const texto = [item.cliente_nome, item.cliente_telefone, item.modelo_carro, item.placa_carro, item.servico_tipo]
 .filter(Boolean)
 .join(' ')
 .toLowerCase();
 
-return (!busca || texto.includes(busca))
+const dataAgendamento = String(item.data_agendamento || '').slice(0, 10);
+
+return (!dataAgendamento || dataAgendamento >= hojeISO)
+&& (!busca || texto.includes(busca))
 && (!status || item.status === status)
 && (!data || item.data_agendamento === data);
 });
