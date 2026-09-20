@@ -372,29 +372,19 @@ transition-duration: 0.01ms !important;
 </div>
 </header>
 
-<nav class="admin-reveal mb-6 flex w-full max-w-xl gap-2 rounded-2xl border border-slate-700 bg-slate-800/90 p-1.5 shadow-lg shadow-slate-950/20" aria-label="Seções do painel">
-<button id="abaOperacao" type="button" class="flex-1 rounded-xl bg-gradient-to-r from-[var(--ard-blue)] to-[var(--ard-red)] px-3 py-3 text-xs font-bold uppercase tracking-wide text-white shadow-lg shadow-blue-900/30 transition hover:brightness-110" aria-selected="true">
-Operação
+<nav class="admin-reveal mb-6 flex w-full max-w-2xl gap-2 rounded-2xl border border-slate-700 bg-slate-800/90 p-1.5 shadow-lg shadow-slate-950/20" aria-label="Seções do painel">
+<button id="abaAgendamentos" type="button" class="flex-1 rounded-xl bg-gradient-to-r from-[var(--ard-blue)] to-[var(--ard-red)] px-3 py-3 text-xs font-bold uppercase tracking-wide text-white shadow-lg shadow-blue-900/30 transition hover:brightness-110" aria-selected="true">
+Agendamentos
 </button>
 <button id="abaRendimento" type="button" class="flex-1 rounded-xl px-3 py-3 text-xs font-bold uppercase tracking-wide text-slate-400 transition hover:bg-slate-700/60 hover:text-white" aria-selected="false">
-Rendimento
+Rendimentos
+</button>
+<button id="abaConfiguracoes" type="button" class="flex-1 rounded-xl px-3 py-3 text-xs font-bold uppercase tracking-wide text-slate-400 transition hover:bg-slate-700/60 hover:text-white" aria-selected="false">
+Configurações
 </button>
 </nav>
 
-<main id="visaoOperacao">
-<section class="admin-reveal admin-reveal-delay-1 admin-panel mb-6 rounded-2xl border border-slate-700 bg-slate-800/90 p-5 shadow-xl shadow-slate-950/30 backdrop-blur-sm">
-<div class="mb-4 flex items-center justify-between gap-3">
-<div>
-<h2 class="text-lg font-bold text-white">Tempo dos serviços</h2>
-<p class="text-sm text-slate-400">Altere aqui a duração estimada de cada tipo de lavagem.</p>
-</div>
-<button id="salvarTempoServicos" class="rounded-xl bg-gradient-to-r from-[var(--ard-blue)] to-[var(--ard-red)] px-4 py-2 text-sm font-semibold text-white transition hover:brightness-110">
-Salvar tempos
-</button>
-</div>
-
-<div id="configuracoesServicos" class="grid gap-4 md:grid-cols-3"></div>
-</section>
+<main id="visaoAgendamentos">
 
 <div class="admin-reveal admin-reveal-delay-2 mb-6 grid gap-4 md:grid-cols-3">
 <div class="admin-panel rounded-2xl border border-slate-700 bg-slate-800/90 p-4">
@@ -543,6 +533,20 @@ Dia com agendamento
 </table>
 </div>
 </section>
+</section>
+
+<section id="visaoConfiguracoes" class="hidden admin-reveal mb-6 rounded-2xl border border-slate-700 bg-slate-800/90 p-5 shadow-xl shadow-slate-950/30 backdrop-blur-sm">
+<div class="mb-5 flex flex-col gap-3 md:flex-row md:items-center md:justify-between">
+<div>
+<p class="text-xs font-semibold uppercase tracking-[0.2em] text-sky-400">Configurações</p>
+<h2 class="mt-2 text-2xl font-bold text-white">Tempo dos serviços</h2>
+<p class="mt-1 text-sm text-slate-400">Altere a duração de cada serviço. Ao salvar, os novos tempos são atualizados no banco de dados e usados pela página do cliente.</p>
+</div>
+<button id="salvarTempoServicos" class="rounded-xl bg-gradient-to-r from-[var(--ard-blue)] to-[var(--ard-red)] px-4 py-2.5 text-sm font-semibold text-white transition hover:brightness-110">
+Salvar tempos
+</button>
+</div>
+<div id="configuracoesServicos" class="grid gap-4 md:grid-cols-3"></div>
 </section>
 </div>
 
@@ -1344,26 +1348,42 @@ renderizarAgendamentos();
 });
 
 function ativarAba(abaAtiva) {
-const operacaoAtiva = abaAtiva === 'operacao';
-const abaOperacao = document.getElementById('abaOperacao');
+const agendamentosAtiva = abaAtiva === 'agendamentos';
+const rendimentoAtiva = abaAtiva === 'rendimento';
+const configuracoesAtiva = abaAtiva === 'configuracoes';
+
+const abaAgendamentos = document.getElementById('abaAgendamentos');
 const abaRendimento = document.getElementById('abaRendimento');
+const abaConfiguracoes = document.getElementById('abaConfiguracoes');
 
-document.getElementById('visaoOperacao').classList.toggle('hidden', !operacaoAtiva);
-document.getElementById('visaoRendimento').classList.toggle('hidden', operacaoAtiva);
-abaOperacao.className = operacaoAtiva
+document.getElementById('visaoAgendamentos').classList.toggle('hidden', !agendamentosAtiva);
+document.getElementById('visaoRendimento').classList.toggle('hidden', !rendimentoAtiva);
+document.getElementById('visaoConfiguracoes').classList.toggle('hidden', !configuracoesAtiva);
+
+const classeInativa = 'flex-1 rounded-xl px-3 py-3 text-xs font-bold uppercase tracking-wide text-slate-400 transition hover:bg-slate-700/60 hover:text-white';
+
+abaAgendamentos.className = agendamentosAtiva
 ? 'flex-1 rounded-xl bg-gradient-to-r from-[var(--ard-blue)] to-[var(--ard-red)] px-3 py-3 text-xs font-bold uppercase tracking-wide text-white shadow-lg shadow-blue-900/30 transition hover:brightness-110'
-: 'flex-1 rounded-xl px-3 py-3 text-xs font-bold uppercase tracking-wide text-slate-400 transition hover:bg-slate-700/60 hover:text-white';
-abaRendimento.className = !operacaoAtiva
-? 'flex-1 rounded-xl bg-emerald-600 px-3 py-3 text-xs font-bold uppercase tracking-wide text-white shadow-lg shadow-emerald-600/20 transition hover:bg-emerald-500'
-: 'flex-1 rounded-xl px-3 py-3 text-xs font-bold uppercase tracking-wide text-slate-400 transition hover:bg-slate-700/60 hover:text-white';
-abaOperacao.setAttribute('aria-selected', String(operacaoAtiva));
-abaRendimento.setAttribute('aria-selected', String(!operacaoAtiva));
+: classeInativa;
 
-if (!operacaoAtiva) carregarRelatorioRendimento();
+abaRendimento.className = rendimentoAtiva
+? 'flex-1 rounded-xl bg-emerald-600 px-3 py-3 text-xs font-bold uppercase tracking-wide text-white shadow-lg shadow-emerald-600/20 transition hover:bg-emerald-500'
+: classeInativa;
+
+abaConfiguracoes.className = configuracoesAtiva
+? 'flex-1 rounded-xl bg-sky-600 px-3 py-3 text-xs font-bold uppercase tracking-wide text-white shadow-lg shadow-sky-600/20 transition hover:bg-sky-500'
+: classeInativa;
+
+abaAgendamentos.setAttribute('aria-selected', String(agendamentosAtiva));
+abaRendimento.setAttribute('aria-selected', String(rendimentoAtiva));
+abaConfiguracoes.setAttribute('aria-selected', String(configuracoesAtiva));
+
+if (rendimentoAtiva) carregarRelatorioRendimento();
 }
 
-document.getElementById('abaOperacao').addEventListener('click', () => ativarAba('operacao'));
+document.getElementById('abaAgendamentos').addEventListener('click', () => ativarAba('agendamentos'));
 document.getElementById('abaRendimento').addEventListener('click', () => ativarAba('rendimento'));
+document.getElementById('abaConfiguracoes').addEventListener('click', () => ativarAba('configuracoes'));
 document.getElementById('periodoRendimento').addEventListener('change', carregarRelatorioRendimento);
 document.getElementById('dataRendimento').addEventListener('change', carregarRelatorioRendimento);
 document.getElementById('dataRendimento').value = obterChaveData(new Date());
