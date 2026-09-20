@@ -388,12 +388,13 @@
           <h2 class="text-lg font-bold text-white">Tempo dos serviços</h2>
           <p class="text-sm text-slate-400">Altere aqui a duração estimada de cada tipo de lavagem.</p>
         </div>
-        <button id="salvarTempoServicos" class="rounded-xl bg-gradient-to-r from-[var(--ard-blue)] to-[var(--ard-red)] px-4 py-2 text-sm font-semibold text-white transition hover:brightness-110">
+        <button id="salvarTempoServicos" type="button" disabled class="rounded-xl bg-gradient-to-r from-[var(--ard-blue)] to-[var(--ard-red)] px-4 py-2 text-sm font-semibold text-white transition hover:brightness-110">
           Salvar tempos
         </button>
       </div>
 
-      <div id="configuracoesServicos" class="grid gap-4 md:grid-cols-3"></div>
+      <p id="statusTemposServicos" role="status" aria-live="polite" class="mb-3 text-sm text-slate-400">Carregando tempos dos serviços...</p>
+      <div id="configuracoesServicos" class="grid max-h-80 gap-4 overflow-y-auto p-1 md:grid-cols-3"></div>
     </section>
 
     <div class="admin-reveal admin-reveal-delay-2 mb-6 grid gap-4 md:grid-cols-3">
@@ -546,18 +547,13 @@
     </section>
   </div>
 
+  <script src="../assets/servicos-config.js"></script>
   <script>
     const SUPABASE_URL = 'https://kjuixvzsekpmzmrbfenf.supabase.co';
     const SUPABASE_KEY = 'sb_publishable_yzmgQdxxK28G_F1rjCN_9w_LpFTIU1Y';
     const supabaseClient = supabase.createClient(SUPABASE_URL, SUPABASE_KEY);
 
-    const STORAGE_KEY = 'lavajato_servicos_config';
     const AGENDAMENTOS_CACHE_KEY = 'lavajato_agendamentos_cache_v1';
-    const SERVICOS_PADRAO = {
-      'Lavagem Simples': 40,
-      'Completa + Aritana': 60,
-      'Polimento + Cera': 90
-    };
 
     const VALORES_SERVICOS_ADMIN = {
       'Ducha externa': 70,
@@ -587,24 +583,31 @@
     let mesCalendarioAdmin = new Date();
     let canalAgendamentos;
 
-    function carregarConfiguracaoServicos() {
-      try {
-        const salvado = localStorage.getItem(STORAGE_KEY);
-        if (!salvado) return { ...SERVICOS_PADRAO };
-
-        const parsed = JSON.parse(salvado);
-        return {
-          'Lavagem Simples': Number(parsed['Lavagem Simples']) || 40,
-          'Completa + Aritana': Number(parsed['Completa + Aritana']) || 60,
-          'Polimento + Cera': Number(parsed['Polimento + Cera']) || 90
-        };
-      } catch (error) {
-        return { ...SERVICOS_PADRAO };
+    const servicosAlterados = new Set();
+    let salvandoTempos = false;
+    const servicosBanco = ConfiguracaoServicos.criar(supabaseClient, {
+      aoAtualizar() {
+        renderizarConfiguracaoServicos();
+        if (!salvandoTempos) mostrarStatusTempos(servicosAlterados.size
+          ? 'Você tem alterações de tempo para salvar.'
+          : 'Tempos sincronizados com o agendamento dos clientes.');
+      },
+      aoErro(erro) {
+        const faltaTabela = erro.code === 'PGRST205' || erro.code === '42P01';
+        mostrarStatusTempos(faltaTabela
+          ? 'Para conectar os tempos, execute supabase-migracao-servicos.sql no SQL Editor do Supabase.'
+          : 'Não foi possível sincronizar os tempos. Verifique a conexão e tente novamente.', true);
       }
+    });
+
+    function mostrarStatusTempos(mensagem, erro = false) {
+      const indicador = document.getElementById('statusTemposServicos');
+      indicador.textContent = mensagem;
+      indicador.className = `mb-3 text-sm ${erro ? 'text-amber-300' : 'text-emerald-300'}`;
     }
 
-    function salvarConfiguracaoServicos(config) {
-      localStorage.setItem(STORAGE_KEY, JSON.stringify(config));
+    function carregarConfiguracaoServicos() {
+      return servicosBanco.obter();
     }
 
     function salvarCacheAgendamentos() {
@@ -629,16 +632,28 @@
     function renderizarConfiguracaoServicos() {
       const container = document.getElementById('configuracoesServicos');
       const servicos = carregarConfiguracaoServicos();
-
-      container.innerHTML = Object.entries(servicos).map(([nome, tempo]) => `
-        <div class="rounded-2xl border border-slate-700 bg-slate-900 p-4">
-          <label class="mb-2 block text-xs font-semibold uppercase tracking-wide text-slate-400">${nome}</label>
-          <div class="flex items-center gap-2 rounded-xl border border-slate-700 bg-slate-800 px-3 py-2">
-            <input type="number" min="15" step="5" value="${tempo}" data-servico="${nome}" class="w-full bg-transparent text-lg font-bold text-white outline-none" />
-            <span class="text-sm text-slate-400">min</span>
+      if (!container.children.length) {
+        container.innerHTML = Object.entries(servicos).map(([nome, tempo], indice) => `
+          <div class="rounded-2xl border border-slate-700 bg-slate-900 p-4">
+            <label for="tempoServico${indice}" class="mb-2 block text-xs font-semibold uppercase tracking-wide text-slate-400">${escaparHtml(nome)}</label>
+            <div class="flex items-center gap-2 rounded-xl border border-slate-700 bg-slate-800 px-3 py-2">
+              <input id="tempoServico${indice}" type="number" required min="15" max="1440" step="5" value="${tempo}" data-servico="${escaparHtml(nome)}" class="w-full bg-transparent text-lg font-bold text-white outline-none disabled:opacity-50" />
+              <span class="text-sm text-slate-400">min</span>
+            </div>
           </div>
-        </div>
-      `).join('');
+        `).join('');
+        container.querySelectorAll('input[data-servico]').forEach(input => {
+          input.addEventListener('input', () => {
+            servicosAlterados.add(input.dataset.servico);
+            mostrarStatusTempos('Você tem alterações de tempo para salvar.');
+          });
+        });
+      }
+      container.querySelectorAll('input[data-servico]').forEach(input => {
+        if (!servicosAlterados.has(input.dataset.servico)) input.value = servicos[input.dataset.servico];
+        input.disabled = salvandoTempos || !servicosBanco.estaCarregado();
+      });
+      document.getElementById('salvarTempoServicos').disabled = salvandoTempos || !servicosBanco.estaCarregado();
     }
 
     function calcularHoraFinal(horaInicial, minutos) {
@@ -1080,13 +1095,28 @@
             `;
 
             linha.querySelector('[data-status-id]').addEventListener('change', async event => {
-              const id = event.target.dataset.statusId;
-              const novoStatus = event.target.value;
+              const seletor = event.target;
+              const id = seletor.dataset.statusId;
+              const novoStatus = seletor.value;
+              const statusAnterior = item.status;
+              seletor.disabled = true;
 
-              const atualizouComSucesso = await atualizarStatus(id, novoStatus);
+              // Abra durante o clique, antes de aguardar o banco, para evitar bloqueio de popup.
+              const janelaWhatsapp = normalizarTelefoneWhatsapp(item.cliente_telefone)
+                ? window.open('about:blank', '_blank')
+                : null;
+              if (janelaWhatsapp) janelaWhatsapp.opener = null;
 
-              if (atualizouComSucesso) {
-                enviarWhatsappAgendamento(id);
+              try {
+                const atualizouComSucesso = await atualizarStatus(id, novoStatus);
+                if (atualizouComSucesso) {
+                  enviarWhatsappAgendamento(id, janelaWhatsapp);
+                } else {
+                  seletor.value = statusAnterior;
+                  if (janelaWhatsapp) janelaWhatsapp.close();
+                }
+              } finally {
+                seletor.disabled = false;
               }
             });
 
@@ -1194,53 +1224,77 @@
     }
 
     async function atualizarStatus(id, novoStatus) {
-      const { error } = await supabaseClient
-        .from('agendamentos')
-        .update({ status: novoStatus })
-        .eq('id', id);
+      try {
+        const { error } = await supabaseClient
+          .from('agendamentos')
+          .update({ status: novoStatus })
+          .eq('id', id);
 
-      if (error) {
-        alert('Erro ao atualizar status: ' + error.message);
-        return false;
-      } else {
-        const agendamento = agendamentosCarregados.find(item => item.id === id);
+        if (error) throw error;
+        const agendamento = agendamentosCarregados.find(item => String(item.id) === String(id));
         if (agendamento) agendamento.status = novoStatus;
         salvarCacheAgendamentos();
         renderizarAgendamentos();
         return true;
+      } catch (error) {
+        alert('Erro ao atualizar status: ' + error.message);
+        return false;
       }
     }
 
-    function enviarWhatsapp(nome, telefone, modelo, status) {
-      const telefoneLimpo = telefone.replace(/\D/g, '');
-      let mensagem = '';
+    function normalizarTelefoneWhatsapp(telefone) {
+      const digitos = String(telefone ?? '').replace(/\D/g, '');
+      if (/^[1-9]\d{9,10}$/.test(digitos)) return '55' + digitos;
+      if (/^55[1-9]\d{9,10}$/.test(digitos)) return digitos;
+      return '';
+    }
 
+    function criarMensagemWhatsapp(nome, modelo, status) {
+      // WhatsApp recebe texto puro. Escapes Unicode preservam os emojis no link UTF-8.
       if (status === 'Em Lavagem') {
-        mensagem = `Olá ${nome}! O seu ${modelo} já começou a ser lavado na ARD CENTRAL Lava-Jato! <span>😀</span>`;
-      } else if (status === 'Pronto') {
-        mensagem = `Boas notícias, ${nome}! O seu ${modelo} está prontinho e brilhando! 🚗✨`;
-      } else if (status === 'Finalizado') {
-        mensagem = `Serviço concluído! Muito obrigado pela preferência, ${nome}! `;
-      } else {
-        mensagem = `Olá ${nome}! Seu agendamento para o ${modelo} está confirmado no ARD CENTRAL Lava-Jato. 📅`;
+        return `Olá ${nome}! O seu ${modelo} já começou a ser lavado na ARD CENTRAL Lava-Jato! \u{1F9FC}\u{1F697}`;
       }
-
-      if (telefoneLimpo) {
-        window.open(`https://wa.me/55${telefoneLimpo}?text=${encodeURIComponent(mensagem)}`, '_blank');
-      } else {
-        alert('Número de telefone inválido!');
+      if (status === 'Pronto') {
+        return `Boas notícias, ${nome}! O seu ${modelo} está prontinho e brilhando! \u{1F697}\u2728`;
       }
+      if (status === 'Finalizado') {
+        return `Serviço concluído! Muito obrigado pela preferência, ${nome}! \u2705\u{1F64F}`;
+      }
+      return `Olá ${nome}! Seu agendamento para o ${modelo} está confirmado no ARD CENTRAL Lava-Jato. \u{1F4C5}`;
     }
 
-    function enviarWhatsappAgendamento(id) {
-      const agendamento = agendamentosCarregados.find(item => item.id === id);
-      if (!agendamento) return;
+    function abrirMensagemWhatsapp(telefone, mensagem, janelaWhatsapp = null) {
+      const telefoneLimpo = normalizarTelefoneWhatsapp(telefone);
+      if (!telefoneLimpo) {
+        if (janelaWhatsapp) janelaWhatsapp.close();
+        alert('Número de telefone inválido! Informe o DDD e o número do cliente.');
+        return false;
+      }
 
-      enviarWhatsapp(
-        agendamento.cliente_nome,
+      const janela = janelaWhatsapp && !janelaWhatsapp.closed
+        ? janelaWhatsapp
+        : window.open('about:blank', '_blank');
+      if (!janela) {
+        alert('O navegador bloqueou o WhatsApp. Permita pop-ups deste site e clique em Aviso para abrir a mensagem.');
+        return false;
+      }
+
+      janela.opener = null;
+      janela.location.href = `https://wa.me/${telefoneLimpo}?text=${encodeURIComponent(mensagem)}`;
+      return true;
+    }
+
+    function enviarWhatsappAgendamento(id, janelaWhatsapp = null) {
+      const agendamento = agendamentosCarregados.find(item => String(item.id) === String(id));
+      if (!agendamento) {
+        if (janelaWhatsapp) janelaWhatsapp.close();
+        return false;
+      }
+
+      return abrirMensagemWhatsapp(
         agendamento.cliente_telefone,
-        agendamento.modelo_carro,
-        agendamento.status
+        criarMensagemWhatsapp(agendamento.cliente_nome, agendamento.modelo_carro, agendamento.status),
+        janelaWhatsapp
       );
     }
 
@@ -1248,8 +1302,9 @@
       if (!confirm('Tem a certeza que deseja eliminar este agendamento?')) return;
 
       const agendamento = agendamentosCarregados.find(item => item.id === id);
-      const telefoneLimpo = agendamento?.cliente_telefone ? String(agendamento.cliente_telefone).replace(/\D/g, '') : '';
+      const telefoneLimpo = normalizarTelefoneWhatsapp(agendamento?.cliente_telefone);
       const janelaWhatsapp = telefoneLimpo ? window.open('about:blank', '_blank') : null;
+      if (janelaWhatsapp) janelaWhatsapp.opener = null;
 
       const { error } = await supabaseClient
         .from('agendamentos')
@@ -1267,26 +1322,47 @@
 
         if (agendamento && telefoneLimpo) {
           const mensagem = `Olá ${agendamento.cliente_nome}! Infelizmente, não poderemos realizar a lavagem do seu ${agendamento.modelo_carro} nesta data. Pedimos desculpas pelo transtorno. Entre em contato conosco para agendarmos uma nova data. ARD CENTRAL Lava-Jato.`;
-          janelaWhatsapp.location.href = `https://wa.me/55${telefoneLimpo}?text=${encodeURIComponent(mensagem)}`;
+          abrirMensagemWhatsapp(telefoneLimpo, mensagem, janelaWhatsapp);
         } else if (janelaWhatsapp) {
           janelaWhatsapp.close();
         }
       }
     }
 
-    document.getElementById('salvarTempoServicos').addEventListener('click', () => {
-      const inputs = document.querySelectorAll('#configuracoesServicos input[data-servico]');
+    document.getElementById('salvarTempoServicos').addEventListener('click', async () => {
+      if (salvandoTempos) return;
+      const inputs = [...document.querySelectorAll('#configuracoesServicos input[data-servico]')];
+      const invalido = inputs.find(input => !input.checkValidity() || !ConfiguracaoServicos.duracaoValida(Number(input.value)));
+      if (invalido) {
+        invalido.reportValidity();
+        invalido.focus();
+        mostrarStatusTempos('Informe tempos entre 15 e 1440 minutos, em intervalos de 5 minutos.', true);
+        return;
+      }
       const novaConfig = {};
-
-      inputs.forEach(input => {
-        const nome = input.dataset.servico;
-        const valor = Number(input.value) || 0;
-        novaConfig[nome] = Math.max(15, valor);
+      inputs.filter(input => servicosAlterados.has(input.dataset.servico)).forEach(input => {
+        novaConfig[input.dataset.servico] = Number(input.value);
       });
-
-      salvarConfiguracaoServicos(novaConfig);
-      alert('Tempos dos serviços atualizados com sucesso!');
-      carregarAgendamentos();
+      if (!Object.keys(novaConfig).length) {
+        mostrarStatusTempos('Os tempos já estão sincronizados. Altere um valor para salvar.');
+        return;
+      }
+      const botao = document.getElementById('salvarTempoServicos');
+      salvandoTempos = true;
+      renderizarConfiguracaoServicos();
+      botao.textContent = 'Salvando...';
+      try {
+        await servicosBanco.salvar(novaConfig);
+        servicosAlterados.clear();
+        mostrarStatusTempos('Tempos salvos! Os novos agendamentos dos clientes usarão esses valores.');
+        renderizarAgendamentos();
+      } catch (erro) {
+        mostrarStatusTempos('Não foi possível salvar os tempos. Suas alterações continuam nos campos; tente novamente.', true);
+      } finally {
+        salvandoTempos = false;
+        botao.textContent = 'Salvar tempos';
+        renderizarConfiguracaoServicos();
+      }
     });
 
     let buscaAgendamentoTimer;
@@ -1344,6 +1420,7 @@
     renderizarCalendarioAdmin();
     carregarAgendamentos();
     assinarAtualizacoesAgendamentos();
+    servicosBanco.iniciar();
   </script>
 </body>
 </html>
