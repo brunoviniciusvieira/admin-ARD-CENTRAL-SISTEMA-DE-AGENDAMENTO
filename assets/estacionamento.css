@@ -1,0 +1,11 @@
+* { box-sizing: border-box; }
+    body { margin: 0; min-height: 100vh; display: grid; place-items: center; padding: 24px; background: radial-gradient(ellipse at top,#0e6dd81a,transparent 65%),#070e1b; color: #f1f5f9; font-family: system-ui, sans-serif; }
+    main { width: 100%; max-width: 520px; padding: 40px 24px; text-align: center; background: linear-gradient(135deg,#13243c,#0b1627); border: 1px solid #294361; border-top: 3px solid #0e6dd8; border-radius: 22px; box-shadow:0 20px 60px #02081755; }
+    .marca { color: #93c5fd; font-size: 12px; font-weight: 700; letter-spacing: .2em; }
+    .marca span { color:#f04753; }
+    .parking-icon { display:grid; place-items:center; margin:26px auto 0; width:64px; height:64px; border:1px solid #315981; border-radius:18px; background:#0e6dd81c; color:#86c4ff; font-size:34px; }
+    h1 { margin: 24px 0 12px; font-size: clamp(24px, 6vw, 32px); }
+    p { color: #cbd5e1; }
+    a { display: inline-block; margin-top: 24px; padding: 12px 20px; border-radius: 12px; background: #2563eb; color: white; text-decoration: none; font-weight: 600; }
+    a:hover { background: #1d4ed8; }
+    a:focus-visible { outline: 3px solid #93c5fd; outline-offset: 4px; }
