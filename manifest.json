@@ -1,0 +1,22 @@
+{
+  "name": "ARD CENTRAL - Sistema de Agendamento",
+  "short_name": "ARD CENTRAL",
+  "description": "Painel administrativo para gestão de agendamentos da ARD CENTRAL Lava-Jato.",
+  "id": "/",
+  "start_url": "/estacionamento.html",
+  "scope": "/",
+  "display": "standalone",
+  "orientation": "portrait",
+  "background_color": "#0f172a",
+  "theme_color": "#0f172a",
+  "lang": "pt-BR",
+  "dir": "ltr",
+  "icons": [
+    {
+      "src": "assets/logo-ard-render.png",
+      "sizes": "1254x1254",
+      "type": "image/png",
+      "purpose": "any maskable"
+    }
+  ]
+}
