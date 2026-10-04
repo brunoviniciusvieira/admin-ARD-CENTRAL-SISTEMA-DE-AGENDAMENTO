@@ -3,7 +3,7 @@
   "short_name": "ARD CENTRAL",
   "description": "Painel administrativo para gestão de agendamentos da ARD CENTRAL Lava-Jato.",
   "id": "/",
-  "start_url": "/estacionamento.html",
+  "start_url": "/index.html",
   "scope": "/",
   "display": "standalone",
   "orientation": "portrait",

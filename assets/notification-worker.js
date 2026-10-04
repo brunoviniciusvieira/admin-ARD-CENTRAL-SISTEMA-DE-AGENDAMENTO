@@ -33,7 +33,9 @@ async function notificarNovoAgendamento(item) {
     icon: new URL('./logo-ard-render.png', self.registration.scope).href,
     tag: `ard-agendamento-${item.id}`,
     renotify: true,
+    requireInteraction: true,
     vibrate: [200, 100, 200],
+    silent: false,
     data: { url: new URL('../index.html', self.registration.scope).href }
   });
 }
@@ -104,6 +106,8 @@ self.addEventListener('push', event => {
       await self.registration.showNotification(payload.title || 'ARD Central', {
         body: payload.body || 'Novo aviso disponível.',
         icon: new URL('./logo-ard-render.png', self.registration.scope).href,
+        vibrate: [200, 100, 200],
+        silent: false,
         data: { url: new URL('../index.html', self.registration.scope).href }
       });
       return;
