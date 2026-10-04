@@ -28,6 +28,7 @@ function montarMensagem(item) {
 
 async function notificarNovoAgendamento(item) {
   if (!item || item.id == null) return;
+  const urlPainel = item?.url || new URL('../index.html', self.registration.scope).href;
   await self.registration.showNotification('ARD Central — novo agendamento', {
     body: montarMensagem(item),
     icon: new URL('./logo-ard-render.png', self.registration.scope).href,
@@ -36,8 +37,42 @@ async function notificarNovoAgendamento(item) {
     requireInteraction: true,
     vibrate: [200, 100, 200],
     silent: false,
-    data: { url: new URL('../index.html', self.registration.scope).href }
+    data: { url: urlPainel }
   });
+}
+
+function normalizarUrl(url) {
+  if (!url) return new URL('../index.html', self.registration.scope).href;
+  try {
+    return new URL(url, self.registration.scope).href;
+  } catch {
+    return new URL('../index.html', self.registration.scope).href;
+  }
+}
+
+function extrairPayloadPush(event) {
+  if (!event.data) return null;
+  let payload;
+  try { payload = event.data.json(); } catch { return null; }
+  if (!payload || typeof payload !== 'object') return null;
+
+  const data = (payload.data && typeof payload.data === 'object') ? payload.data : {};
+  const notification = (payload.notification && typeof payload.notification === 'object') ? payload.notification : {};
+  const fcmOptions = (payload.fcmOptions && typeof payload.fcmOptions === 'object') ? payload.fcmOptions : {};
+  const id = data.id ?? payload.id ?? null;
+  const title = data.title || notification.title || payload.title || null;
+  const body = data.body || notification.body || payload.body || null;
+  const dataAgendamento = data.data_agendamento || payload.data_agendamento || null;
+  const horarioAgendamento = data.horario_agendamento || payload.horario_agendamento || null;
+  const url = normalizarUrl(
+    data.url ||
+    fcmOptions.link ||
+    notification.click_action ||
+    payload.url ||
+    payload.link
+  );
+
+  return { id, title, body, dataAgendamento, horarioAgendamento, url };
 }
 
 async function buscarUltimoAgendamento() {
@@ -94,24 +129,34 @@ self.addEventListener('message', event => {
 
 self.addEventListener('push', event => {
   event.waitUntil((async () => {
-    if (!event.data) return verificarNovosAgendamentos().catch(() => {});
-    let payload;
-    try { payload = event.data.json(); } catch { payload = null; }
-    if (payload?.id != null) {
-      await notificarNovoAgendamento(payload);
+    const payload = extrairPayloadPush(event);
+    if (!payload) {
+      await verificarNovosAgendamentos().catch(() => {});
+      return;
+    }
+
+    if (payload.id != null) {
+      await notificarNovoAgendamento({
+        id: payload.id,
+        data_agendamento: payload.dataAgendamento,
+        horario_agendamento: payload.horarioAgendamento,
+        url: payload.url
+      });
       await salvarUltimoIdNotificado(payload.id);
       return;
     }
-    if (payload?.title || payload?.body) {
+
+    if (payload.title || payload.body) {
       await self.registration.showNotification(payload.title || 'ARD Central', {
         body: payload.body || 'Novo aviso disponível.',
         icon: new URL('./logo-ard-render.png', self.registration.scope).href,
         vibrate: [200, 100, 200],
         silent: false,
-        data: { url: new URL('../index.html', self.registration.scope).href }
+        data: { url: payload.url }
       });
       return;
     }
+
     await verificarNovosAgendamentos().catch(() => {});
   })());
 });
