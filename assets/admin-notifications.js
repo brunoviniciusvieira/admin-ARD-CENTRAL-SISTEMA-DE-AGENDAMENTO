@@ -1,9 +1,13 @@
 (() => {
   'use strict';
   const key = 'ard-notificacoes-ativas';
+  const backgroundKey = 'ard-notificacoes-segundo-plano';
   const button = document.getElementById('ativarNotificacoes');
   const test = document.getElementById('testarNotificacoes');
   const status = document.getElementById('statusNotificacoes');
+  const keepBackground = document.getElementById('manterSegundoPlano');
+  const batteryButton = document.getElementById('abrirConfiguracaoBateria');
+  const backgroundStatus = document.getElementById('statusSegundoPlano');
   const banner = document.getElementById('avisoAgendamento');
   const bannerText = document.getElementById('textoAvisoAgendamento');
   const closeBannerButton = document.getElementById('fecharAvisoAgendamento');
@@ -12,11 +16,24 @@
   let audio;
   let registration;
   let backgroundMode = '';
+  let keepAlive = true;
   const seen = new Set();
   let baselineReady = false;
   const known = new Set();
   try { enabled = localStorage.getItem(key) === 'true'; } catch {}
+  try { keepAlive = localStorage.getItem(backgroundKey) !== 'false'; } catch {}
   const supported = window.isSecureContext && 'Notification' in window;
+
+  function getBatteryInstruction() {
+    const ua = navigator.userAgent.toLowerCase();
+    if (ua.includes('android')) {
+      return 'Android: abra Configurações > Apps > navegador > Bateria e marque "Sem restrição".';
+    }
+    if (ua.includes('iphone') || ua.includes('ipad') || ua.includes('ios')) {
+      return 'iPhone/iPad: em Ajustes > Safari, desative "Economia de Energia" quando precisar de alertas imediatos.';
+    }
+    return 'No sistema, desative o modo de economia de bateria para o navegador e mantenha o app instalado.';
+  }
 
   function render(message) {
     const active = enabled;
@@ -36,9 +53,17 @@
         status.textContent = 'Avisos ativos. O app tentará checar novos agendamentos em segundo plano quando o navegador permitir.';
       } else if (backgroundMode === 'sync') {
         status.textContent = 'Avisos ativos. O app fará verificações em segundo plano quando houver oportunidade de sincronização.';
+      } else if (!keepAlive) {
+        status.textContent = 'Avisos ativos sem reforço em segundo plano. Ative essa opção nas configurações para reduzir atrasos.';
       } else {
         status.textContent = 'Avisos ativos. Para reduzir atrasos em segundo plano, mantenha o app instalado e desative a economia de bateria para o navegador.';
       }
+    }
+    if (keepBackground) keepBackground.checked = keepAlive;
+    if (backgroundStatus) {
+      backgroundStatus.textContent = keepAlive
+        ? `Modo em segundo plano ativado. ${getBatteryInstruction()}`
+        : 'Modo em segundo plano desativado. Os avisos tocarão quando o painel estiver aberto.';
     }
   }
 
@@ -91,6 +116,10 @@
   }
 
   async function configureBackgroundChecks() {
+    if (!keepAlive) {
+      backgroundMode = '';
+      return;
+    }
     const activeRegistration = await worker();
     let mode = '';
     if (typeof activeRegistration.active?.postMessage === 'function') {
@@ -175,6 +204,22 @@
     finally { button.disabled = false; }
   });
   test.addEventListener('click', async () => { await prepareAudio(); await notify({}, true); });
+  keepBackground?.addEventListener('change', async () => {
+    keepAlive = keepBackground.checked;
+    try { localStorage.setItem(backgroundKey, String(keepAlive)); } catch {}
+    if (enabled && keepAlive) {
+      try { await configureBackgroundChecks(); }
+      catch {}
+    } else {
+      backgroundMode = '';
+    }
+    render();
+  });
+  batteryButton?.addEventListener('click', () => {
+    const instruction = getBatteryInstruction();
+    if (backgroundStatus) backgroundStatus.textContent = instruction;
+    window.alert(`Para notificações mais estáveis:\n\n${instruction}`);
+  });
   document.addEventListener('pointerdown', () => { if (enabled) void prepareAudio(); }, { once: true });
   document.addEventListener('keydown', () => { if (enabled) void prepareAudio(); }, { once: true });
   document.addEventListener('visibilitychange', () => { if (!document.hidden) render(); });
