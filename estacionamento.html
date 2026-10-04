@@ -1,32 +1,17 @@
 <!DOCTYPE html>
-<html lang="pt-BR">
-<head>
-  <meta charset="UTF-8" />
-  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>Estacionamento | ARD CENTRAL</title>
-  <link rel="manifest" href="manifest.json" />
-  <meta name="theme-color" content="#0f172a" />
-  <meta name="apple-mobile-web-app-capable" content="yes" />
-  <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent" />
-  <meta name="apple-mobile-web-app-title" content="ARD CENTRAL" />
-  <style>
-    * { box-sizing: border-box; }
-    body { margin: 0; min-height: 100vh; display: grid; place-items: center; padding: 24px; background: #0f172a; color: #f1f5f9; font-family: system-ui, sans-serif; }
-    main { width: 100%; max-width: 520px; padding: 40px 24px; text-align: center; background: #1e293b; border: 1px solid #334155; border-top: 4px solid #3b82f6; border-radius: 20px; }
-    .marca { color: #93c5fd; font-size: 12px; font-weight: 700; letter-spacing: .2em; }
-    h1 { margin: 24px 0 12px; font-size: clamp(24px, 6vw, 32px); }
-    p { color: #cbd5e1; }
-    a { display: inline-block; margin-top: 24px; padding: 12px 20px; border-radius: 12px; background: #2563eb; color: white; text-decoration: none; font-weight: 600; }
-    a:hover { background: #1d4ed8; }
-    a:focus-visible { outline: 3px solid #93c5fd; outline-offset: 4px; }
-  </style>
-</head>
-<body>
-  <main>
-    <div class="marca">ARD CENTRAL</div>
-    <h1>Estacionamento</h1>
-    <p>Em desenvolvimento</p>
-    <a href="index.html">Voltar ao painel</a>
-  </main>
-</body>
-</html>
+<html lang="pt-BR"><head><meta charset="UTF-8"><meta name="viewport" content="width=device-width, initial-scale=1"><title>Estacionamento | ARD CENTRAL</title><meta name="theme-color" content="#070e1b"><link rel="icon" href="assets/favicon.jpeg"><link rel="stylesheet" href="assets/estacionamento.css"><script defer src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script><script defer src="assets/supabase-config.js"></script><script defer src="assets/estacionamento-core.js"></script><script defer src="assets/estacionamento-db.js"></script><script defer src="assets/estacionamento.js"></script></head>
+<body><main>
+<header class="panel header"><div class="brand"><img src="assets/logo-ard-render.png" alt="ARD Central" width="68" height="68"><div><p class="eyebrow"><span>ARD</span> CENTRAL</p><h1>Estacionamento</h1><p>Seus mensalistas e renovações em um só lugar.</p></div></div><a class="button secondary" href="index.html">← Voltar ao painel</a></header>
+<section class="panel connection"><div class="connection-heading"><p id="db-status" role="status" aria-live="polite">Conectando ao banco...</p><div class="actions"><button id="refresh-db" class="secondary" type="button">Atualizar dados</button></div></div><div id="migration-panel" hidden><p>Existem cadastros antigos salvos neste navegador. Transfira-os para acessar em outros dispositivos. Placas já existentes no banco serão preservadas.</p><button id="migrate-local" type="button" class="primary">Transferir cadastros para o banco</button></div></section>
+<section class="summary" aria-label="Resumo dos contratos"><div class="panel metric"><span>Mensalistas cadastrados</span><strong id="total">0</strong><small>Todos os contratos</small></div><div class="panel metric"><span>Contratos em dia</span><strong id="active">0</strong><small>Dentro do período contratado</small></div><div class="panel metric warning"><span>Próximos do vencimento</span><strong id="soon">0</strong><small>Vencem em até 5 dias</small></div><div class="panel metric danger"><span>Renovação pendente</span><strong id="expired">0</strong><small>Prazo contratado encerrado</small></div></section>
+<section class="panel alerts"><div><h2>Avisos de renovação</h2><p id="expiry-alert" role="status" aria-live="polite"></p><small id="notification-status">Os avisos são verificados com o sistema aberto e ao voltar à página.</small></div><button id="enable-notifications" class="secondary" type="button">Ativar notificações</button></section>
+<p id="feedback" role="status" aria-live="polite"></p>
+<div class="workspace"><section class="panel form-panel"><p class="eyebrow">CONTROLE DE CONTRATOS</p><h2 id="form-title">Novo mensalista</h2><p>Cadastre o cliente e escolha a duração.</p><form id="client-form">
+<label>Nome do cliente<input name="name" required maxlength="100" autocomplete="name" placeholder="Nome completo"></label>
+<label>WhatsApp com DDD<input name="phone" type="tel" required maxlength="20" autocomplete="tel" placeholder="(11) 99999-9999"><small>Número brasileiro, com DDD.</small></label>
+<div class="form-row"><label>Placa<input name="plate" required maxlength="8" placeholder="ABC1D23" autocapitalize="characters"></label><label>Carro / modelo<input name="car" required maxlength="80" placeholder="Ex.: Honda Civic"></label></div>
+<div class="form-row"><label>Início do contrato<input name="start" type="date" required></label><label>Duração em dias<input name="days" type="number" min="1" max="3650" value="30" required></label></div>
+<div class="date-preview"><span>Renovação em</span><strong id="due-preview">—</strong><small>O contrato vence nesta data, após o período completo.</small></div><button id="save-client" class="primary" type="submit">Cadastrar mensalista</button><button id="cancel-edit" class="secondary" type="button" hidden>Cancelar edição</button></form></section>
+<section class="panel list-panel"><div class="list-heading"><div><p class="eyebrow">ADMINISTRAÇÃO</p><h2>Mensalistas</h2></div><span id="result-count" class="count"></span></div><div class="filters"><label>Buscar cliente<input id="search" type="search" placeholder="Nome, placa ou carro"></label><label>Situação<select id="filter"><option value="all">Todos os contratos</option><option value="expired">Vencidos</option><option value="soon">Vencem em até 5 dias</option><option value="active">Em dia</option><option value="scheduled">Ainda não iniciados</option></select></label></div><div id="client-list"></div></section></div>
+<footer>Cadastros armazenados no banco de dados. É necessário estar conectado para salvar alterações. <button id="export" type="button" class="text-button">Exportar backup</button><button id="import" type="button" class="text-button">Importar cadastros</button><input id="import-file" type="file" accept="application/json,.json" hidden></footer>
+</main><dialog id="renew-dialog"><form id="renew-form"><h2>Renovar contrato</h2><p id="renew-name"></p><p id="renew-feedback" role="alert"></p><label>Início do novo período<input name="start" type="date" required></label><label>Duração em dias<input name="days" type="number" min="1" max="3650" required></label><p>Para contratos em dia, o próximo período começa no vencimento. Para vencidos, começa hoje. Você pode ajustar a data.</p><div class="actions"><button class="primary" type="submit">Confirmar renovação</button><button id="cancel-renew" type="button" class="secondary">Cancelar</button></div></form></dialog></body></html>
