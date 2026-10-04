@@ -69,7 +69,7 @@
   async function worker() {
     if (!('serviceWorker' in navigator)) throw new Error('Service worker indisponível');
     if (!registration) {
-      const registered = await navigator.serviceWorker.register('./assets/notification-worker.js?v=20261003');
+      const registered = await navigator.serviceWorker.register('./assets/notification-worker.js?v=20261004');
       if (registered.active) registration = registered;
       else registration = await new Promise((resolve, reject) => {
         const pending = registered.installing || registered.waiting;
@@ -118,7 +118,10 @@
         icon: new URL('./assets/logo-ard-render.png', document.baseURI).href,
         tag: preview ? 'ard-teste' : `ard-agendamento-${item.id}`,
         vibrate: [200, 100, 200],
-        data: { url: new URL('./index.html', document.baseURI).href }
+        data: { url: new URL('./index.html', document.baseURI).href },
+        renotify: !preview,
+        requireInteraction: !preview,
+        silent: false
     };
     // Local feedback must not depend on service worker or OS notification success.
     const banner = document.getElementById('avisoAgendamento');
