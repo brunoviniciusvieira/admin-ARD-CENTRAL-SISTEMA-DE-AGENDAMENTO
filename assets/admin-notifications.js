@@ -4,6 +4,10 @@
   const button = document.getElementById('ativarNotificacoes');
   const test = document.getElementById('testarNotificacoes');
   const status = document.getElementById('statusNotificacoes');
+  const banner = document.getElementById('avisoAgendamento');
+  const bannerText = document.getElementById('textoAvisoAgendamento');
+  const closeBannerButton = document.getElementById('fecharAvisoAgendamento');
+  if (!button || !test || !status || !banner || !bannerText || !closeBannerButton) return;
   let enabled = false;
   let audio;
   let registration;
@@ -69,7 +73,7 @@
   async function worker() {
     if (!('serviceWorker' in navigator)) throw new Error('Service worker indisponível');
     if (!registration) {
-      const registered = await navigator.serviceWorker.register('./assets/notification-worker.js?v=20261004');
+      const registered = await navigator.serviceWorker.register('./assets/notification-worker.js?v=20261004-2');
       if (registered.active) registration = registered;
       else registration = await new Promise((resolve, reject) => {
         const pending = registered.installing || registered.waiting;
@@ -124,9 +128,8 @@
         silent: false
     };
     // Local feedback must not depend on service worker or OS notification success.
-    const banner = document.getElementById('avisoAgendamento');
     banner.hidden = false;
-    document.getElementById('textoAvisoAgendamento').textContent = `${title}. ${options.body}`;
+    bannerText.textContent = `${title}. ${options.body}`;
     sound();
     if (!document.hidden && typeof navigator.vibrate === 'function') {
       try { navigator.vibrate([200, 100, 200]); } catch {}
@@ -178,8 +181,8 @@
   window.addEventListener('storage', event => {
     if (event.key === key) { enabled = event.newValue === 'true'; render(); }
   });
-  document.getElementById('fecharAvisoAgendamento').addEventListener('click', () => {
-    document.getElementById('avisoAgendamento').hidden = true;
+  closeBannerButton.addEventListener('click', () => {
+    banner.hidden = true;
   });
   window.avisarNovoAgendamento = item => {
     if (item.id != null) known.add(String(item.id));
