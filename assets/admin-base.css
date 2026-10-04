@@ -1,0 +1,341 @@
+:root {
+      --admin-blue: #0e6dd8;
+      --admin-glow: rgba(14, 109, 216, 0.18);
+      --ard-blue: #0e6dd8;
+      --ard-blue-light: #3b9dff;
+      --ard-red: #e11d2e;
+      --ard-red-dark: #a3121f;
+    }
+
+    body {
+      background:
+        radial-gradient(circle at 10% 0%, rgba(14, 109, 216, 0.2), transparent 32%),
+        radial-gradient(circle at 90% 20%, rgba(225, 29, 46, 0.12), transparent 28%),
+        #020617;
+      background-size: 140% 140%;
+      animation: ambientShift 16s ease-in-out infinite alternate;
+    }
+
+    .brand-bar {
+      background: linear-gradient(90deg, var(--ard-red), var(--ard-blue) 55%, var(--ard-blue-light));
+    }
+
+    .admin-reveal {
+      animation: revealUp 0.7s both;
+    }
+
+    .admin-reveal-delay-1 { animation-delay: 0.12s; }
+    .admin-reveal-delay-2 { animation-delay: 0.24s; }
+    .admin-reveal-delay-3 { animation-delay: 0.36s; }
+
+    .admin-panel {
+      transition: transform 0.3s ease, border-color 0.3s ease, box-shadow 0.3s ease;
+    }
+
+    .admin-panel:hover {
+      border-color: rgba(56, 189, 248, 0.35);
+      box-shadow: 0 18px 45px rgba(2, 8, 23, 0.45), 0 0 28px var(--admin-glow);
+      transform: translateY(-2px);
+    }
+
+    .admin-pulse {
+      animation: statusPulse 2.4s ease-in-out infinite;
+    }
+
+    .admin-filter {
+      transition: border-color 0.2s ease, box-shadow 0.2s ease;
+    }
+
+    .admin-filter:focus {
+      border-color: var(--admin-blue);
+      box-shadow: 0 0 0 3px rgba(56, 189, 248, 0.12);
+      outline: none;
+    }
+
+    .admin-calendar {
+      margin-top: 1rem;
+      max-width: 25rem;
+      border: 1px solid rgb(51 65 85);
+      border-radius: 0.875rem;
+      background: rgba(15, 23, 42, 0.72);
+      padding: 0.875rem;
+    }
+
+    .admin-calendar-grid {
+      display: grid;
+      grid-template-columns: repeat(7, minmax(0, 1fr));
+      gap: 0.35rem;
+    }
+
+    .admin-calendar-day {
+      display: grid;
+      min-height: 2.25rem;
+      place-items: center;
+      border: 1px solid transparent;
+      border-radius: 0.5rem;
+      color: rgb(148 163 184);
+      font-size: 1rem;
+      transition: border-color 0.2s ease, background-color 0.2s ease, color 0.2s ease;
+    }
+
+    .admin-calendar-day:not(:disabled):hover {
+      border-color: rgba(56, 189, 248, 0.55);
+      color: white;
+    }
+
+    .admin-calendar-day.has-appointments {
+      border-color: rgba(16, 185, 129, 0.5);
+      background: rgba(16, 185, 129, 0.2);
+      color: rgb(167 243 208);
+      font-weight: 800;
+    }
+
+    .admin-calendar-day.selected {
+      border-color: rgb(56 189 248);
+      background: rgba(14, 165, 233, 0.28);
+      color: white;
+      box-shadow: 0 0 0 2px rgba(56, 189, 248, 0.12);
+    }
+
+    .admin-calendar-day.today {
+      text-decoration: underline;
+      text-decoration-color: rgb(125 211 252);
+      text-underline-offset: 0.2rem;
+    }
+
+    .admin-day-list {
+      display: grid;
+      gap: 1.25rem;
+      padding: 1rem;
+    }
+
+    .admin-day-group {
+      overflow: hidden;
+      border: 1px solid rgb(51 65 85);
+      border-radius: 1rem;
+      background: rgba(15, 23, 42, 0.48);
+    }
+
+    .admin-day-title {
+      border-bottom: 1px solid rgb(51 65 85);
+      padding: 1rem 1.25rem;
+      background: rgba(30, 41, 59, 0.82);
+      color: rgb(224 242 254);
+      font-size: 1rem;
+      font-weight: 800;
+      letter-spacing: 0.04em;
+    }
+
+    .admin-table-wrap {
+      overflow-x: auto;
+    }
+
+    .admin-table {
+      width: 100%;
+      min-width: 880px;
+      border-collapse: collapse;
+      font-size: 1rem;
+    }
+
+    .admin-table thead th {
+      position: sticky;
+      top: 0;
+      z-index: 1;
+      border-bottom: 1px solid rgb(51 65 85);
+      background: rgba(15, 23, 42, 0.92);
+      padding: 0.65rem 0.85rem;
+      color: rgb(148 163 184);
+      font-size: 1rem;
+      font-weight: 800;
+      letter-spacing: 0.08em;
+      text-align: left;
+      text-transform: uppercase;
+      white-space: nowrap;
+    }
+
+    .admin-table tbody tr {
+      border-bottom: 1px solid rgba(51, 65, 85, 0.6);
+      transition: background-color 0.15s ease;
+      animation: rowReveal 0.35s both;
+    }
+
+    .admin-table tbody tr:last-child {
+      border-bottom: none;
+    }
+
+    .admin-table tbody tr:hover {
+      background: rgba(30, 41, 59, 0.6);
+    }
+
+    .admin-table td {
+      vertical-align: top;
+      padding: 0.7rem 0.85rem;
+      color: rgb(226 232 240);
+    }
+
+    .admin-time-cell {
+      white-space: nowrap;
+      font-weight: 800;
+      color: rgb(125 211 252);
+    }
+
+    .admin-time-cell .cell-secondary {
+      display: block;
+      margin-top: 0.15rem;
+      color: rgb(100 116 139);
+      font-size: 1rem;
+      font-weight: 600;
+    }
+
+    .status-badge {
+      display: inline-flex;
+      align-items: center;
+      gap: 0.3rem;
+      border-radius: 9999px;
+      padding: 0.25rem 0.6rem;
+      font-size: 1rem;
+      font-weight: 700;
+      white-space: nowrap;
+    }
+
+    .status-badge.status-aguardando {
+      border: 1px solid rgba(245, 158, 11, 0.35);
+      background: rgba(245, 158, 11, 0.12);
+      color: rgb(252 211 77);
+    }
+
+    .status-badge.status-em-lavagem {
+      border: 1px solid rgba(59, 130, 246, 0.35);
+      background: rgba(59, 130, 246, 0.14);
+      color: rgb(147 197 253);
+    }
+
+    .status-badge.status-pronto {
+      border: 1px solid rgba(16, 185, 129, 0.35);
+      background: rgba(16, 185, 129, 0.14);
+      color: rgb(110 231 183);
+    }
+
+    .status-badge.status-finalizado {
+      border: 1px solid rgba(148, 163, 184, 0.35);
+      background: rgba(148, 163, 184, 0.14);
+      color: rgb(203 213 225);
+    }
+
+    .service-list {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 0.3rem;
+      max-width: 220px;
+    }
+
+    .service-item {
+      display: inline-flex;
+      max-width: 100%;
+      border: 1px solid rgb(51 65 85);
+      border-radius: 0.5rem;
+      background: rgba(15, 23, 42, 0.7);
+      padding: 0.25rem 0.5rem;
+      color: rgb(226 232 240);
+      font-size: 1rem;
+      font-weight: 600;
+      line-height: 0.95rem;
+    }
+
+    .admin-table .cell-label {
+      display: block;
+      margin-bottom: 0.2rem;
+      color: rgb(100 116 139);
+      font-size: 1rem;
+      font-weight: 700;
+      letter-spacing: 0.06em;
+      text-transform: uppercase;
+    }
+
+    .admin-table .cell-secondary {
+      display: block;
+      margin-top: 0.2rem;
+      color: rgb(148 163 184);
+      font-size: 1rem;
+    }
+
+    .admin-actions-cell {
+      display: flex;
+      flex-direction: column;
+      gap: 0.4rem;
+      min-width: 150px;
+    }
+
+    .admin-actions-cell select {
+      border: 1px solid rgb(51 65 85);
+      border-radius: 0.5rem;
+      background: rgb(15 23 42);
+      padding: 0.35rem 0.5rem;
+      color: white;
+      font-size: 1rem;
+    }
+
+    .admin-actions-cell select:focus {
+      border-color: var(--admin-blue);
+      outline: none;
+    }
+
+    .admin-actions-cell .actions-row {
+      display: flex;
+      gap: 0.4rem;
+    }
+
+    .admin-actions-cell button {
+      flex: 1;
+      border-radius: 0.5rem;
+      padding: 0.35rem 0.5rem;
+      font-size: 1rem;
+      font-weight: 600;
+      transition: filter 0.15s ease;
+    }
+
+    .admin-actions-cell button:hover {
+      filter: brightness(1.12);
+    }
+
+    .admin-empty-day {
+      padding: 1.5rem;
+      color: rgb(100 116 139);
+      font-size: 1rem;
+      text-align: center;
+    }
+
+    @media (max-width: 560px) {
+      .service-list {
+        max-width: 100%;
+      }
+    }
+
+    @keyframes ambientShift {
+      from { background-position: 0% 0%; }
+      to { background-position: 100% 100%; }
+    }
+
+    @keyframes revealUp {
+      from { opacity: 0; transform: translateY(18px); }
+      to { opacity: 1; transform: translateY(0); }
+    }
+
+    @keyframes rowReveal {
+      from { opacity: 0; transform: translateX(-8px); }
+      to { opacity: 1; transform: translateX(0); }
+    }
+
+    @keyframes statusPulse {
+      0%, 100% { box-shadow: 0 0 0 0 rgba(16, 185, 129, 0.15); }
+      50% { box-shadow: 0 0 0 7px rgba(16, 185, 129, 0); }
+    }
+
+    @media (prefers-reduced-motion: reduce) {
+      *, *::before, *::after {
+        animation-duration: 0.01ms !important;
+        animation-iteration-count: 1 !important;
+        scroll-behavior: auto !important;
+        transition-duration: 0.01ms !important;
+      }
+    }
