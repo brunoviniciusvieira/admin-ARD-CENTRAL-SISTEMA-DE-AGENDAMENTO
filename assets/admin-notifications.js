@@ -7,6 +7,7 @@
   let enabled = false;
   let audio;
   let registration;
+  let backgroundMode = '';
   const seen = new Set();
   let baselineReady = false;
   const known = new Set();
@@ -26,6 +27,15 @@
         : active
           ? 'Avisos de novos agendamentos ativos. Clique em Testar aviso para liberar o som nesta visita.'
           : 'Ative para receber avisos de novos agendamentos neste dispositivo.');
+    if (active && supported && Notification.permission === 'granted') {
+      if (backgroundMode === 'periodic') {
+        status.textContent = 'Avisos ativos. O app tentará checar novos agendamentos em segundo plano quando o navegador permitir.';
+      } else if (backgroundMode === 'sync') {
+        status.textContent = 'Avisos ativos. O app fará verificações em segundo plano quando houver oportunidade de sincronização.';
+      } else {
+        status.textContent = 'Avisos ativos. Para reduzir atrasos em segundo plano, mantenha o app instalado e desative a economia de bateria para o navegador.';
+      }
+    }
   }
 
   async function prepareAudio() {
@@ -59,7 +69,7 @@
   async function worker() {
     if (!('serviceWorker' in navigator)) throw new Error('Service worker indisponível');
     if (!registration) {
-      const registered = await navigator.serviceWorker.register('./assets/notification-worker.js');
+      const registered = await navigator.serviceWorker.register('./assets/notification-worker.js?v=20261003');
       if (registered.active) registration = registered;
       else registration = await new Promise((resolve, reject) => {
         const pending = registered.installing || registered.waiting;
@@ -74,6 +84,27 @@
       });
     }
     return registration;
+  }
+
+  async function configureBackgroundChecks() {
+    const activeRegistration = await worker();
+    let mode = '';
+    if (typeof activeRegistration.active?.postMessage === 'function') {
+      activeRegistration.active.postMessage({ type: 'CHECK_AGENDAMENTOS' });
+    }
+    if ('periodicSync' in activeRegistration) {
+      try {
+        await activeRegistration.periodicSync.register('ard-check-agendamentos', { minInterval: 15 * 60 * 1000 });
+        mode = 'periodic';
+      } catch {}
+    }
+    if (!mode && 'sync' in activeRegistration) {
+      try {
+        await activeRegistration.sync.register('ard-check-agendamentos');
+        mode = 'sync';
+      } catch {}
+    }
+    backgroundMode = mode;
   }
 
   async function notify(item, preview = false) {
@@ -131,6 +162,7 @@
       await permission;
       enabled = true;
       try { localStorage.setItem(key, String(enabled)); } catch {}
+      if (enabled) await configureBackgroundChecks();
       render();
       if (enabled) await notify({}, true);
     } catch { render('Não foi possível ativar. Verifique a permissão do navegador.'); }
@@ -159,5 +191,6 @@
     }
     baselineReady = true;
   };
+  if (enabled) void configureBackgroundChecks().finally(render);
   render();
 })();
