@@ -33,6 +33,7 @@
           <div class="hours-card"><svg viewBox="0 0 24 24" fill="none" aria-hidden="true"><circle cx="12" cy="12" r="8.5" stroke="currentColor" stroke-width="1.5"/><path d="M12 7v5l3 2" stroke="currentColor" stroke-width="1.5" stroke-linecap="round"/></svg><div><small>Atendimento</small><strong>07:30 às 17:30</strong><span>Segunda a sábado</span></div></div>
           <div style="max-width:320px">
             <button type="button" id="ativarNotificacoes" class="refresh-button" aria-pressed="false" aria-describedby="statusNotificacoes">Ativar notificações</button>
+            <button type="button" id="testarNotificacoes" class="refresh-button" hidden>Testar aviso</button>
             <p id="statusNotificacoes" class="mt-2 text-sm text-slate-300" role="status"></p>
             <p class="mt-1 text-xs text-slate-400">Instale o app e permita notificações. Em segundo plano, o envio depende do navegador e da economia de bateria do aparelho.</p>
           </div>
@@ -69,19 +70,6 @@
 
       <p id="statusTemposServicos" role="status" aria-live="polite" class="text-base text-amber-300"></p>
       <div id="configuracoesServicos" class="grid gap-4 md:grid-cols-3"></div>
-      <section class="mt-5 rounded-2xl border border-slate-700 bg-slate-900/50 p-4">
-        <h3 class="text-base font-bold text-white">Notificações em segundo plano</h3>
-        <p class="mt-1 text-base text-slate-400">Use estas opções para reduzir atrasos nos avisos quando o app estiver minimizado.</p>
-        <div class="mt-4 grid gap-3">
-          <button type="button" id="testarNotificacoes" class="refresh-button" hidden>Testar aviso</button>
-          <label class="flex items-start gap-3 rounded-xl border border-slate-700 bg-slate-900 px-3 py-2.5 text-base text-slate-200">
-            <input id="manterSegundoPlano" type="checkbox" class="mt-1 h-4 w-4 rounded border-slate-500 bg-slate-800 text-sky-400" />
-            <span>Manter verificações em segundo plano para tocar avisos sempre que possível.</span>
-          </label>
-          <button type="button" id="abrirConfiguracaoBateria" class="refresh-button">Como desativar otimização de bateria</button>
-          <p id="statusSegundoPlano" class="text-sm text-slate-300" role="status"></p>
-        </div>
-      </section>
     </section>
 
     <main id="visaoOperacao">
