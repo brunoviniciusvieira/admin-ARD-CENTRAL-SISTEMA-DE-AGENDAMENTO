@@ -1,6 +1,13 @@
-const SUPABASE_URL = window.ARD_SUPABASE.url;
-    const SUPABASE_KEY = window.ARD_SUPABASE.key;
-    const supabaseClient = supabase.createClient(SUPABASE_URL, SUPABASE_KEY);
+const SUPABASE_URL = 'https://kjuixvzsekpmzmrbfenf.supabase.co';
+const SUPABASE_KEY = 'sb_publishable_yzmgQdxxK28G_F1rjCN_9w_LpFTIU1Y';
+
+if (!window.supabase?.createClient) {
+  document.getElementById('statusSincronizacao').textContent =
+    'Erro: biblioteca do Supabase não carregou.';
+  throw new Error('Biblioteca do Supabase não carregou.');
+}
+
+const supabaseClient = window.supabase.createClient(SUPABASE_URL, SUPABASE_KEY);
 
     const STORAGE_KEY = 'lavajato_servicos_config';
     const AGENDAMENTOS_CACHE_KEY = 'lavajato_agendamentos_cache_v1';
